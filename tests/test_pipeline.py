@@ -304,3 +304,20 @@ def test_non_evaluation_run_does_not_age_stale_metrics(tmp_path):
     assert latest["evaluated"] is False
     assert latest["metrics"]["fg"]["status"] == "stale"
     assert latest["metrics"]["fg"]["stale_evals"] == 1
+
+
+def test_non_evaluation_run_at_stale_limit_keeps_stale_and_sends_nothing(tmp_path):
+    root = make_root(tmp_path)
+    sent = []
+    run_daily(root, make_fetchers("2026-11-02"), at(3), None)  # Mon: fg live
+    for end, day in (("2026-11-03", 4), ("2026-11-04", 5), ("2026-11-05", 6)):
+        run_daily(root, make_fetchers(end, fg_fail=True), at(day), None)
+    assert read_latest(root)["metrics"]["fg"]["stale_evals"] == 3
+    before = read_latest(root)["metrics"]["fg"]
+    result = run_daily(root, make_fetchers("2026-11-05", fg_fail=True), at(7),
+                       lambda s, b: sent.append(s))
+    latest = read_latest(root)
+    assert latest["evaluated"] is False
+    assert latest["metrics"]["fg"] == before
+    assert result["notifications"] == []
+    assert sent == []

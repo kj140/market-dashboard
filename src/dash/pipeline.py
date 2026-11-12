@@ -137,6 +137,25 @@ def _metrics_from_latest(latest: dict | None) -> dict[str, Metric] | None:
     return out
 
 
+def _hold_without_aging(
+    current: dict[str, Metric], previous: dict[str, Metric]
+) -> dict[str, Metric]:
+    """Non-evaluation run: a metric that failed now keeps the previous one without aging,
+    because stale_evals counts evaluation days only (spec 7.5). A previous stale metric is
+    reused as-is; a previous live one becomes stale with stale_evals 0 (it was not fetched
+    by this run, so it must not be shown as live)."""
+    out = dict(current)
+    for key, cur in current.items():
+        prev = previous.get(key)
+        if cur.status != "missing" or key not in METRIC_FREQ or prev is None or prev.value is None:
+            continue
+        if prev.status == "stale":
+            out[key] = replace(prev, extra=dict(prev.extra))
+        elif prev.status == "live":
+            out[key] = replace(prev, status="stale", stale_evals=0, extra=dict(prev.extra))
+    return out
+
+
 def _last_date(s: pd.Series | None) -> str | None:
     if s is None:
         return None
@@ -210,13 +229,10 @@ def run_daily(
 
     metrics = compute_metrics(raw, asof=None, manual=manual)
     prev_metrics = _metrics_from_latest(prev_latest)
-    metrics = carry_forward(metrics, prev_metrics, rules["stale_limits"], METRIC_FREQ)
-    if not evaluated and prev_metrics:
-        # stale_evals counts evaluation days (spec 7.5): a non-evaluation run does not age it.
-        for key, m in metrics.items():
-            if m.status == "stale" and key in prev_metrics:
-                prev_evals = prev_metrics[key].stale_evals if prev_metrics[key].status == "stale" else 0
-                metrics[key] = replace(m, stale_evals=prev_evals)
+    if evaluated:
+        metrics = carry_forward(metrics, prev_metrics, rules["stale_limits"], METRIC_FREQ)
+    elif prev_metrics:
+        metrics = _hold_without_aging(metrics, prev_metrics)
 
     latest = {
         "generated_at": now_jst.isoformat(timespec="seconds"),
