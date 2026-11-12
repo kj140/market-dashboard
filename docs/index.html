@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0f1420">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="キャッシュ目安">
+<title>キャッシュ比率の目安</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="wrap">
+  <header class="hd">
+    <span id="updated">読み込み中…</span>
+  </header>
+  <div id="stale" class="banner" hidden></div>
+  <div id="error" class="banner" hidden>データを読み込めませんでした</div>
+
+  <div id="app" hidden>
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+
+    <section class="card" id="area">
+      <div class="row">
+        <b id="area-title"></b>
+        <span class="big-wrap"><span id="area-delta" class="delta"></span><span id="area-ratio" class="big"></span></span>
+      </div>
+      <div id="area-hold" class="hold-note" hidden>判定保留（使えない指標が多いため前回の比率のまま）</div>
+      <div class="seg" id="ranges">
+        <button type="button" data-days="30">1か月</button>
+        <button type="button" data-days="91" class="on">3か月</button>
+        <button type="button" data-days="365">1年</button>
+      </div>
+      <div class="chart-box"><canvas id="chart" aria-label="キャッシュ比率の推移"></canvas></div>
+      <div class="lg" id="legend"></div>
+      <div class="lg-note">点線・薄い色はさかのぼり計算の期間、グレーは判定保留の期間</div>
+      <p class="rs" id="area-reason"></p>
+      <ul class="notes" id="area-notes"></ul>
+    </section>
+
+    <section class="card" id="tickers"></section>
+
+    <details class="card details">
+      <summary>指標の詳細</summary>
+      <table class="mt">
+        <thead><tr><th>指標</th><th>値</th><th>状態</th><th>点数</th></tr></thead>
+        <tbody id="metrics"></tbody>
+      </table>
+    </details>
+  </div>
+
+  <footer class="ft">個人の判断補助であり投資助言ではありません</footer>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
