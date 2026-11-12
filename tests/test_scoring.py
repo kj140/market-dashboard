@@ -97,7 +97,7 @@ def test_hold_semi_four_missing():
 
 def test_hold_keeps_previous_ratio():
     r = evaluate_area("semi", semi_metrics(4), RULES, {"ratio": 35, "pending_down": 10})
-    assert r.on_hold and r.ratio == 35 and r.pending_down == 10 and r.prev_ratio == 35
+    assert r.on_hold and r.ratio == 35 and r.pending_down is None and r.prev_ratio == 35
     r = evaluate_area("semi", semi_metrics(4), RULES, None)
     assert r.on_hold and r.ratio == 20 and r.prev_ratio is None
 
@@ -112,9 +112,25 @@ def test_backfill_absent_manual_not_counted():
 
 def test_ratio_excl_manual():
     ms = semi_metrics(0)
+    ms["capex_gdp"] = m("capex_gdp", 18)  # +1
+    ms["gdp_spread"] = m("gdp_spread", 0.3)  # +1
     ms["sox_per"] = m("sox_per", 14, status="manual")  # -2
     r = evaluate_area("semi", ms, RULES, None)
-    pts_excl = r.points + 2
-    assert r.points == score_area("semi", ms, RULES)[0]
-    assert r.ratio_excl_manual == points_to_ratio(pts_excl, RULES["ratio_steps"])
-    assert r.raw_ratio == points_to_ratio(r.points, RULES["ratio_steps"])
+    assert r.points == 0
+    assert r.raw_ratio == 20
+    assert r.ratio_excl_manual == 35
+    assert r.raw_ratio != r.ratio_excl_manual
+
+
+def test_hold_day_resets_pending_down():
+    good = semi_metrics(0)
+    good["fg"] = m("fg", 85)  # +3 each for fg band -> push ratio up
+    r1 = evaluate_area("semi", good, RULES, None)
+    assert r1.ratio > 20
+    bad = semi_metrics(0)  # 0 points -> raw 20, lower than r1.ratio
+    r2 = evaluate_area("semi", bad, RULES, {"ratio": r1.ratio, "pending_down": r1.pending_down})
+    assert r2.ratio == r1.ratio and r2.pending_down == 20
+    r3 = evaluate_area("semi", semi_metrics(4), RULES, {"ratio": r2.ratio, "pending_down": r2.pending_down})
+    assert r3.on_hold and r3.ratio == r1.ratio and r3.pending_down is None
+    r4 = evaluate_area("semi", bad, RULES, {"ratio": r3.ratio, "pending_down": r3.pending_down})
+    assert r4.ratio == r1.ratio and r4.pending_down == 20

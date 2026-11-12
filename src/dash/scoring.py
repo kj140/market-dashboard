@@ -106,7 +106,7 @@ def evaluate_area(
     prev_pending = prev.get("pending_down") if prev else None
     if on_hold:
         ratio = prev_ratio if prev_ratio is not None else points_to_ratio(0, steps)
-        pending = prev_pending
+        pending = None  # R12: a hold day breaks the consecutive-day requirement
     else:
         ratio, pending = apply_hysteresis(raw_ratio, prev_ratio, prev_pending)
     return AreaResult(
