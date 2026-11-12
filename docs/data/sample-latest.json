@@ -5,6 +5,10 @@
     "us": "2026-11-11",
     "jp": "2026-11-12"
   },
+  "market_fetch": {
+    "ok": true,
+    "failed_since": null
+  },
   "metrics": {
     "fg": {
       "label": "Fear & Greed",

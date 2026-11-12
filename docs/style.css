@@ -33,6 +33,7 @@ body {
 .wrap { max-width: 520px; margin: 0 auto; padding: 12px; }
 
 .hd { font-size: 12px; color: var(--mut); margin-bottom: 8px; }
+.hd-sub { margin-top: 2px; }
 
 .banner {
   background: var(--red-bg);

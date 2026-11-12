@@ -23,6 +23,8 @@ const MARKS = [
   { id: 'today', label: '今日', color: '#ffffff' },
 ];
 
+const NO_DATA = 'データなし';
+
 const STATUS_LABEL = { live: '取得', stale: '前回値', manual: '手入力', missing: '取得失敗' };
 
 // Scoring keys that are derived from a metric with another key.
@@ -127,6 +129,21 @@ function renderHeader() {
   } else {
     banner.hidden = true;
   }
+
+  // Which closes the ratios and verdicts were evaluated on (R18).
+  const dates = state.latest.market_dates || {};
+  $('eval-dates').textContent = `評価: 米 ${md(dates.us) || '—'}・日 ${md(dates.jp) || '—'} 終値`;
+  const mf = state.latest.market_fetch;
+  const marketBanner = $('market-fetch');
+  if (mf && mf.ok === false) {
+    const since = mf.failed_since ? fmtJst(mf.failed_since) : null;
+    const lastClose = [dates.us, dates.jp].filter(Boolean).sort().pop();
+    marketBanner.textContent = `市場データを取得できていません（${since || '不明'} から）。`
+      + `表示中の比率・判定は ${md(lastClose) || '不明'} 終値時点のものです`;
+    marketBanner.hidden = false;
+  } else {
+    marketBanner.hidden = true;
+  }
 }
 
 // ---------- tabs ----------
@@ -222,7 +239,8 @@ function renderNotes() {
     }
     if (m.status === 'manual' && m.extra && m.extra.overdue) {
       const days = m.extra.days_since_update;
-      const ago = days !== undefined && days !== null ? `、${days}日前` : '';
+      let ago = '';
+      if (typeof days === 'number') ago = days < 0 ? '、日付が未来です' : `、${days}日前`;
       add(`手入力値が古くなっています：${m.label}（${md(m.as_of)}更新${ago}）`, true);
     }
   }
@@ -409,7 +427,9 @@ function renderTickers() {
       : `高値比 ${t.drop_pct > 0 ? '-' : ''}${fmtNum(t.drop_pct, 1)}%`;
     item.appendChild(el('div', 'px', `${price} ／ ${drop}`));
 
-    if (t.prev_verdict && t.prev_verdict !== t.verdict) {
+    // データなし is a fetch state, not a verdict (R19): no 前日→今日 line around it.
+    const comparable = t.prev_verdict && t.prev_verdict !== NO_DATA && t.verdict !== NO_DATA;
+    if (comparable && t.prev_verdict !== t.verdict) {
       item.appendChild(el('div', 'chg', `前日 ${t.prev_verdict} → 今日 ${t.verdict}`));
     }
     if (t.reason) item.appendChild(el('p', 'rs', t.reason));
