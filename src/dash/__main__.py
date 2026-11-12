@@ -32,6 +32,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "backfill":
         n = run_backfill(root, fetchers, _today(), days=args.days)
+        if n is None:
+            return 1
         log.info("backfill: created %d entries", n)
         return 0
 

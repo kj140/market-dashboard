@@ -6,10 +6,14 @@ import smtplib
 from collections.abc import Mapping
 from email.message import EmailMessage
 
+from .verdict import NO_DATA
+
 log = logging.getLogger(__name__)
 
 AREA_NAMES = {"us": "米国", "jp": "日本", "semi": "半導体"}
 MAX_SUBJECT_ITEMS = 2
+MARKET_FETCH_LABEL = "市場データ(株価指数)"
+SMTP_TIMEOUT_SECONDS = 30
 
 
 def _area_name(area: str) -> str:
@@ -32,7 +36,8 @@ def _body(lines: list[str], page_url: str) -> str:
 
 
 def _verdict_changes(prev: dict, curr: dict) -> tuple[list[str], list[str]]:
-    """(件名用の項目, 本文用の行) を返す。保留中の分野とその銘柄は比較しない。"""
+    """(件名用の項目, 本文用の行) を返す。保留中の分野とその銘柄は比較しない。
+    データなし への/からの変化は取得状態の変化なので _state_changes で扱う(R19)。"""
     items: list[str] = []
     lines: list[str] = []
     prev_areas = prev.get("areas", {})
@@ -52,6 +57,8 @@ def _verdict_changes(prev: dict, curr: dict) -> tuple[list[str], list[str]]:
             continue
         if p is None or p.get("verdict") == t.get("verdict"):
             continue
+        if NO_DATA in (p.get("verdict"), t.get("verdict")):
+            continue
         items.append(f"{t['name']} {p['verdict']}→{t['verdict']}")
         lines.append(f"{t['name']}: {p['verdict']}→{t['verdict']}")
         if t.get("reason"):
@@ -60,9 +67,16 @@ def _verdict_changes(prev: dict, curr: dict) -> tuple[list[str], list[str]]:
 
 
 def _state_changes(prev: dict, curr: dict) -> tuple[list[str], list[str]]:
-    """(新たに missing / 保留になったもの, 回復 / 保留解除したもの) の表示名。"""
+    """(新たに missing / 保留 / 取得失敗になったもの, 回復 / 保留解除したもの) の表示名。"""
     failed: list[str] = []
     recovered: list[str] = []
+    # market_fetch が無い(古い)latest.json は取得できていた扱い。
+    was_ok = (prev.get("market_fetch") or {}).get("ok", True)
+    is_ok = (curr.get("market_fetch") or {}).get("ok", True)
+    if was_ok and not is_ok:
+        failed.append(MARKET_FETCH_LABEL)
+    elif is_ok and not was_ok:
+        recovered.append(MARKET_FETCH_LABEL)
     prev_metrics = prev.get("metrics", {})
     for key, m in curr.get("metrics", {}).items():
         p = prev_metrics.get(key)
@@ -84,6 +98,18 @@ def _state_changes(prev: dict, curr: dict) -> tuple[list[str], list[str]]:
             failed.append(f"{_area_name(area)}(判定保留)")
         else:
             recovered.append(f"{_area_name(area)}(保留解除)")
+    prev_tickers = {t["symbol"]: t for t in prev.get("tickers", [])}
+    for t in curr.get("tickers", []):
+        p = prev_tickers.get(t["symbol"])
+        if p is None:
+            continue
+        was_none = p.get("verdict") == NO_DATA
+        is_none = t.get("verdict") == NO_DATA
+        label = f"{t.get('name') or t['symbol']}(株価)"
+        if is_none and not was_none:
+            failed.append(label)
+        elif was_none and not is_none:
+            recovered.append(label)
     return failed, recovered
 
 
@@ -122,7 +148,7 @@ def send_gmail(subject: str, body: str, env: Mapping[str, str]) -> bool:
     msg["To"] = to
     msg.set_content(body, charset="utf-8")
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=SMTP_TIMEOUT_SECONDS) as smtp:
             smtp.login(address, password)
             smtp.send_message(msg)
     except Exception as exc:  # 認証情報を含み得るので型名だけ記録する

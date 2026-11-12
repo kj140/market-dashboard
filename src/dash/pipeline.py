@@ -210,34 +210,61 @@ def run_daily(
     prev_latest = _read_latest(paths["latest"])
     history = load_history(paths["history"])
     last_entry = history[-1] if history else None
+    generated_at = now_jst.isoformat(timespec="seconds")
 
+    market_ok = True
     market_dates = {}
     for market, sym in MARKETS.items():
         d = _last_date(raw.closes.get(sym))
-        if d is None and last_entry is not None:
-            # A failed fetch must not look like new market data.
-            d = (last_entry.get("market_dates") or {}).get(market)
+        if d is None:
+            market_ok = False
+            if last_entry is not None:
+                # A failed fetch must not look like new market data.
+                d = (last_entry.get("market_dates") or {}).get(market)
         market_dates[market] = d
+    if not market_ok:
+        log.error("market index fetch failed; keeping the last evaluation (R18)")
 
-    evaluated = is_new_evaluation(market_dates, last_entry)
-    if not evaluated and prev_latest is None:
-        # Nothing to carry forward (e.g. right after a backfill): re-evaluate the same
-        # market data, replacing the history entry that already holds it.
+    # evaluated: new market data, written to history. recompute: nothing to carry forward
+    # (latest.json absent/unreadable), so rebuild the state of the entry that already holds
+    # this market data from the entry before it, without advancing it.
+    recompute = False
+    chain_from = last_entry
+    if market_ok and is_new_evaluation(market_dates, last_entry):
         evaluated = True
-        history = history[:-1]
-        last_entry = history[-1] if history else None
+    elif prev_latest is None:
+        recompute = True
+        if last_entry is not None and not is_new_evaluation(market_dates, last_entry):
+            chain_from = history[-2] if len(history) >= 2 else None
+        # Only a backfill entry may be replaced by the daily evaluation of the same data (F1).
+        evaluated = market_ok and last_entry is not None and last_entry.get("backfill") is True
+        if evaluated:
+            history = history[:-1]
+    else:
+        evaluated = False
 
     metrics = compute_metrics(raw, asof=None, manual=manual)
     prev_metrics = _metrics_from_latest(prev_latest)
-    if evaluated:
+    if evaluated or not market_ok:
+        # A market-fetch-failed run ages metrics like an evaluation day, so an outage reaches
+        # missing (and is mailed) instead of freezing the page (R18).
         metrics = carry_forward(metrics, prev_metrics, rules["stale_limits"], METRIC_FREQ)
     elif prev_metrics:
         metrics = _hold_without_aging(metrics, prev_metrics)
 
+    prev_fetch = (prev_latest or {}).get("market_fetch") or {}
+    if market_ok:
+        market_fetch = {"ok": True, "failed_since": None}
+    elif prev_fetch.get("ok") is False and prev_fetch.get("failed_since"):
+        market_fetch = {"ok": False, "failed_since": prev_fetch["failed_since"]}
+    else:
+        market_fetch = {"ok": False, "failed_since": generated_at}
+
     latest = {
-        "generated_at": now_jst.isoformat(timespec="seconds"),
+        "generated_at": generated_at,
         "evaluated": evaluated,
         "market_dates": market_dates,
+        "market_fetch": market_fetch,
         "metrics": {k: _metric_to_dict(m) for k, m in metrics.items()},
         "areas": {},
         "tickers": [],
@@ -249,9 +276,9 @@ def run_daily(
         },
     }
 
-    if evaluated:
-        prev_areas = (last_entry or {}).get("areas") or {}
-        prev_verdicts = (last_entry or {}).get("verdicts") or {}
+    if evaluated or recompute:
+        prev_areas = (chain_from or {}).get("areas") or {}
+        prev_verdicts = (chain_from or {}).get("verdicts") or {}
         areas: dict[str, AreaResult] = {}
         for area in AREAS:
             r = evaluate_area(area, metrics, rules, prev=prev_areas.get(area))
@@ -265,14 +292,15 @@ def run_daily(
             results.append(tr)
         latest["areas"] = {a: _area_to_dict(r) for a, r in areas.items()}
         latest["tickers"] = [asdict(tr) for tr in results]
-        history.append({
-            "date": today.isoformat(),
-            "backfill": False,
-            "market_dates": market_dates,
-            "areas": _history_areas(areas),
-            "verdicts": {tr.symbol: tr.verdict for tr in results},
-        })
-        save_history(paths["history"], history)
+        if evaluated:
+            history.append({
+                "date": today.isoformat(),
+                "backfill": False,
+                "market_dates": market_dates,
+                "areas": _history_areas(areas),
+                "verdicts": {tr.symbol: tr.verdict for tr in results},
+            })
+            save_history(paths["history"], history)
     else:
         latest["areas"] = prev_latest["areas"]
         latest["tickers"] = prev_latest["tickers"]
@@ -307,26 +335,30 @@ def _trading_dates(raw: RawData, start: date, end: date) -> list[date]:
     return sorted(dates)
 
 
-def run_backfill(root: Path, fetchers: Fetchers, today: date, days: int = 365) -> int:
+def run_backfill(
+    root: Path, fetchers: Fetchers, today: date, days: int = 365
+) -> int | None:
     """Recompute history for past trading days (no hold rule, no manual PER, no reasons,
-    no notifications). Existing `backfill: false` entries are kept and chained through.
-    Returns the number of entries created."""
+    no notifications). A one-time setup step: once history holds a daily (`backfill: false`)
+    entry it refuses and returns None without writing (R20), because the daily chain would
+    no longer follow from the recomputed entries. Otherwise returns the number created."""
     root = Path(root)
     paths = _paths(root)
+    history = load_history(paths["history"])
+    if any(e.get("backfill") is False for e in history):
+        log.error("backfill refused: history already has daily entries (backfill is a "
+                  "one-time setup step; delete docs/data/history.json to start over)")
+        return None
     rules = load_rules(paths["rules"])
     tickers = load_tickers(paths["tickers"])
     symbols = list(dict.fromkeys(MARKET_SYMBOLS + [t.symbol for t in tickers]))
     raw = collect_raw(fetchers, symbols)
 
-    existing = {e["date"]: e for e in load_history(paths["history"])}
+    existing = {e["date"]: e for e in history}
     created = 0
     prev_entry: dict | None = None
     for d in _trading_dates(raw, today - timedelta(days=days), today):
         iso = d.isoformat()
-        kept = existing.get(iso)
-        if kept is not None and kept.get("backfill") is False:
-            prev_entry = kept
-            continue
         metrics = compute_metrics(raw, asof=d, manual=None)
         prev_areas = (prev_entry or {}).get("areas") or {}
         areas = {

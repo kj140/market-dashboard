@@ -138,6 +138,39 @@ def test_on_hold_area_not_compared():
     assert not any("→50%" in s or "SOXL" in s for s in change)
 
 
+def test_ticker_no_data_is_fetch_failure_not_verdict_change():
+    prev = make_latest()
+    curr = make_latest()
+    curr["tickers"][1]["verdict"] = "データなし"
+    out = build_notifications(prev, curr, URL)
+    assert [s for s, _ in out] == ["【取得失敗】ディスコ(株価)"]
+    back = build_notifications(curr, make_latest(), URL)
+    assert [s for s, _ in back] == ["【回復】ディスコ(株価)"]
+
+
+def test_ticker_no_data_unchanged_sends_nothing():
+    prev = make_latest()
+    prev["tickers"][1]["verdict"] = "データなし"
+    assert build_notifications(prev, copy.deepcopy(prev), URL) == []
+
+
+def test_market_fetch_failure_and_recovery_notified_once():
+    ok = make_latest(market_fetch={"ok": True, "failed_since": None})
+    failed = make_latest(evaluated=False,
+                         market_fetch={"ok": False, "failed_since": "2026-11-13T06:30:00+09:00"})
+    out = build_notifications(ok, failed, URL)
+    assert [s for s, _ in out] == ["【取得失敗】市場データ(株価指数)"]
+    assert build_notifications(failed, copy.deepcopy(failed), URL) == []
+    back = build_notifications(failed, ok, URL)
+    assert [s for s, _ in back] == ["【回復】市場データ(株価指数)"]
+
+
+def test_market_fetch_absent_in_prev_counts_as_ok():
+    failed = make_latest(evaluated=False, market_fetch={"ok": False, "failed_since": "x"})
+    out = build_notifications(make_latest(), failed, URL)
+    assert [s for s, _ in out] == ["【取得失敗】市場データ(株価指数)"]
+
+
 def test_send_gmail_missing_env_does_not_raise(monkeypatch):
     def boom(*a, **k):
         raise AssertionError("must not connect")
@@ -151,8 +184,8 @@ def test_send_gmail_sends_once(monkeypatch):
     calls = {"init": [], "login": [], "sent": []}
 
     class FakeSMTP:
-        def __init__(self, host, port, *a, **k):
-            calls["init"].append((host, port))
+        def __init__(self, host, port, *, timeout):
+            calls["init"].append((host, port, timeout))
 
         def __enter__(self):
             return self
@@ -169,7 +202,7 @@ def test_send_gmail_sends_once(monkeypatch):
     monkeypatch.setattr(smtplib, "SMTP_SSL", FakeSMTP)
     env = {"GMAIL_ADDRESS": "from@example.test", "GMAIL_APP_PASSWORD": "secret-pw", "NOTIFY_TO": "to@example.test"}
     assert send_gmail("【判定変更】テスト", "本文です", env) is True
-    assert calls["init"] == [("smtp.gmail.com", 465)]
+    assert calls["init"] == [("smtp.gmail.com", 465, 30)]
     assert calls["login"] == [("from@example.test", "secret-pw")]
     assert len(calls["sent"]) == 1
     msg = calls["sent"][0]

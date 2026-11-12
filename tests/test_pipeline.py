@@ -215,23 +215,45 @@ def test_backfill_respects_days_window(tmp_path):
     assert 0 < n <= 7
 
 
-def test_backfill_keeps_daily_entries(tmp_path):
-    root = make_root(tmp_path)
-    path = root / "docs" / "data" / "history.json"
-    daily_entry = {
+def _daily_entry():
+    return {
         "date": "2026-11-05", "backfill": False,
         "market_dates": {"us": "2026-11-05", "jp": "2026-11-05"},
         "areas": {a: {"ratio": 90, "raw_ratio": 90, "ratio_excl_manual": 90, "points": 9,
                       "on_hold": False, "pending_down": None} for a in ("us", "jp", "semi")},
         "verdicts": {"NVDA": "marker"},
     }
-    save_history(path, [daily_entry])
+
+
+def test_backfill_refuses_after_daily_entries(tmp_path):
+    root = make_root(tmp_path)
+    path = root / "docs" / "data" / "history.json"
+    save_history(path, [_daily_entry()])
+    before = path.read_bytes()
     n = run_backfill(root, make_fetchers("2026-11-11", n=30), date(2026, 11, 12))
-    history = load_history(path)
-    assert n == 29
+    assert n is None
+    assert path.read_bytes() == before
+
+
+def test_main_backfill_exits_1_after_daily_entries(tmp_path, monkeypatch):
+    root = make_root(tmp_path)
+    path = root / "docs" / "data" / "history.json"
+    save_history(path, [_daily_entry()])
+    before = path.read_bytes()
+    monkeypatch.chdir(root)
+    monkeypatch.setattr(cli, "default_fetchers", lambda env: make_fetchers("2026-11-11", n=30))
+    monkeypatch.setattr(cli, "_today", lambda: date(2026, 11, 12))
+    assert cli.main(["backfill"]) == 1
+    assert path.read_bytes() == before
+
+
+def test_backfill_rerun_before_daily_replaces_backfill_entries(tmp_path):
+    root = make_root(tmp_path)
+    run_backfill(root, make_fetchers("2026-11-11", n=30), date(2026, 11, 12))
+    n = run_backfill(root, make_fetchers("2026-11-11", n=30), date(2026, 11, 12))
+    history = load_history(root / "docs" / "data" / "history.json")
+    assert n == 30
     assert len(history) == 30
-    kept = [e for e in history if e["date"] == "2026-11-05"]
-    assert kept == [daily_entry]
 
 
 def test_daily_after_backfill_same_market_data_evaluates(tmp_path):
@@ -333,3 +355,130 @@ def test_latest_carries_display_values_on_every_run(tmp_path):
     latest = read_latest(root)
     assert latest["evaluated"] is False
     assert latest["display"] == {"stale_page_hours": 36, "normal_ratio": 20}
+
+
+def test_unreadable_latest_does_not_replace_daily_entry(tmp_path):
+    root = make_root(tmp_path)
+    hpath = root / "docs" / "data" / "history.json"
+    run_daily(root, make_fetchers("2026-11-06"), at(7), None)
+    assert load_history(hpath)[-1]["backfill"] is False
+    (root / "docs" / "data" / "latest.json").write_text("{not json", encoding="utf-8")
+    before = hpath.read_bytes()
+    sent = []
+    run_daily(root, make_fetchers("2026-11-06", fg_value=80.0), at(8), lambda s, b: sent.append(s))
+    latest = read_latest(root)
+    assert hpath.read_bytes() == before
+    assert latest["evaluated"] is False
+    assert set(latest["areas"]) == {"us", "jp", "semi"}
+    assert len(latest["tickers"]) == 7
+    assert latest["metrics"]["fg"]["value"] == 80.0
+    # the existing entry's state is recomputed from the entry before it, not advanced
+    for a in ("us", "jp", "semi"):
+        assert latest["areas"][a]["prev_ratio"] is None
+    assert sent == []
+
+
+def test_live_metric_on_failed_non_evaluation_run_then_ages_on_evaluation_day(tmp_path):
+    root = make_root(tmp_path)
+    run_daily(root, make_fetchers("2026-11-06"), at(7), None)  # Fri data: fg live
+    assert read_latest(root)["metrics"]["fg"]["status"] == "live"
+    run_daily(root, make_fetchers("2026-11-06", fg_fail=True), at(8), None)  # weekend
+    latest = read_latest(root)
+    assert latest["evaluated"] is False
+    assert latest["metrics"]["fg"]["status"] == "stale"
+    assert latest["metrics"]["fg"]["stale_evals"] == 0
+    run_daily(root, make_fetchers("2026-11-09", fg_fail=True), at(10), None)  # Mon data
+    latest = read_latest(root)
+    assert latest["evaluated"] is True
+    assert latest["metrics"]["fg"]["status"] == "stale"
+    assert latest["metrics"]["fg"]["stale_evals"] == 1
+
+
+def _market_down(base: Fetchers) -> Fetchers:
+    def closes(symbols):
+        raise RuntimeError("YFRateLimitError")
+
+    return Fetchers(closes=closes, fred=base.fred, fear_greed=base.fear_greed)
+
+
+YAHOO_DAILY = ("ndx_drop", "n225_drop", "sox_drop", "wti", "usdjpy_1m")
+
+
+def test_market_fetch_outage_ages_metrics_and_mails_on_transitions(tmp_path):
+    root = make_root(tmp_path)
+    hpath = root / "docs" / "data" / "history.json"
+    sent: list[tuple[int, str]] = []
+    run_no = 0
+
+    def send(subject, body):
+        sent.append((run_no, subject))
+        return True
+
+    run_daily(root, make_fetchers("2026-11-11"), at(12), send)
+    good = read_latest(root)
+    assert good["market_fetch"] == {"ok": True, "failed_since": None}
+    history_before = hpath.read_bytes()
+
+    statuses = []
+    for run_no, day in enumerate((13, 14, 15, 16, 17), start=1):
+        run_daily(root, _market_down(make_fetchers("2026-11-11")), at(day), send)
+        latest = read_latest(root)
+        assert latest["evaluated"] is False
+        assert latest["market_fetch"] == {"ok": False, "failed_since": "2026-11-13T06:30:00+09:00"}
+        assert latest["market_dates"] == good["market_dates"]
+        assert latest["areas"] == good["areas"]
+        assert latest["tickers"] == good["tickers"]
+        assert latest["metrics"]["fg"]["status"] == "live"
+        statuses.append({latest["metrics"][k]["status"] for k in YAHOO_DAILY})
+    assert statuses == [{"stale"}, {"stale"}, {"stale"}, {"missing"}, {"missing"}]
+    assert hpath.read_bytes() == history_before
+
+    failures = [(n, s) for n, s in sent if s.startswith("【取得失敗】")]
+    market = [(n, s) for n, s in failures if "市場データ(株価指数)" in s]
+    assert market == [(1, "【取得失敗】市場データ(株価指数)")]
+    # The Yahoo metrics running out of stale days is its own state change (spec 10).
+    assert [n for n, _ in failures] == [1, 4]
+    assert not any(s.startswith("【判定変更】") for _, s in sent)
+
+    run_no = 6
+    run_daily(root, make_fetchers("2026-11-18"), at(19), send)
+    latest = read_latest(root)
+    assert latest["evaluated"] is True
+    assert latest["market_fetch"] == {"ok": True, "failed_since": None}
+    assert all(latest["metrics"][k]["status"] == "live" for k in YAHOO_DAILY)
+    recovered = [s for n, s in sent if n == 6 and s.startswith("【回復】")]
+    assert len(recovered) == 1 and "市場データ(株価指数)" in recovered[0]
+    assert len(load_history(hpath)) == 2
+
+
+def test_one_market_index_missing_is_market_fetch_failure(tmp_path):
+    root = make_root(tmp_path)
+    run_daily(root, make_fetchers("2026-11-11"), at(12), None)
+    good = read_latest(root)
+    run_daily(root, make_fetchers("2026-11-12", skip=("285A.T", "^GSPC")), at(13), None)
+    latest = read_latest(root)
+    assert latest["market_fetch"]["ok"] is False
+    assert latest["evaluated"] is False
+    assert latest["areas"] == good["areas"]
+    assert len(load_history(root / "docs" / "data" / "history.json")) == 1
+
+
+def test_first_run_with_market_down_writes_no_history(tmp_path):
+    root = make_root(tmp_path)
+    run_daily(root, _market_down(make_fetchers("2026-11-11")), at(12), None)
+    latest = read_latest(root)
+    assert latest["market_fetch"] == {"ok": False, "failed_since": "2026-11-12T06:30:00+09:00"}
+    assert latest["evaluated"] is False
+    assert set(latest["areas"]) == {"us", "jp", "semi"}
+    assert not (root / "docs" / "data" / "history.json").exists()
+
+
+def test_ticker_fetch_blip_mails_failure_and_recovery_not_verdict_change(tmp_path):
+    root = make_root(tmp_path)
+    sent = []
+    run_daily(root, make_fetchers("2026-11-11", skip=()), at(12), lambda s, b: sent.append(s))
+    run_daily(root, make_fetchers("2026-11-12", skip=("NVDA",)), at(13), lambda s, b: sent.append(s))
+    run_daily(root, make_fetchers("2026-11-13", skip=()), at(14), lambda s, b: sent.append(s))
+    assert not any(s.startswith("【判定変更】") for s in sent)
+    assert [s for s in sent if s.startswith("【取得失敗】")] == ["【取得失敗】エヌビディア(株価)"]
+    assert [s for s in sent if s.startswith("【回復】")] == ["【回復】エヌビディア(株価)"]
