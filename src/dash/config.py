@@ -83,14 +83,13 @@ def _missing(key: str) -> Metric:
                   status="missing", as_of=None, unit="倍")
 
 
-def load_manual(path: Path, today: date) -> dict[str, Metric]:
+def load_manual(path: Path, today: date, overdue_days: int) -> dict[str, Metric]:
     try:
         data = _read_yaml(path)
     except (OSError, yaml.YAMLError):
         data = None
     if not isinstance(data, dict):
         data = {}
-    overdue_days = 14
     out: dict[str, Metric] = {}
     for key in MANUAL_KEYS:
         entry = data.get(key)

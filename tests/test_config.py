@@ -8,6 +8,7 @@ from dash.config import load_manual, load_rules, load_tickers
 
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = ROOT / "config"
+OVERDUE = load_rules(CONFIG / "rules.yaml")["manual_overdue_days"]
 
 
 def test_load_tickers_has_seven_with_areas():
@@ -48,7 +49,7 @@ def test_load_manual_ok(tmp_path):
         "topix_per: {value: 13.7, updated: 2026-11-05}\n"
         "sox_per: {value: 14.2, updated: 2026-11-05}\n",
     )
-    m = load_manual(p, today=date(2026, 11, 20))
+    m = load_manual(p, today=date(2026, 11, 20), overdue_days=OVERDUE)
     t = m["topix_per"]
     assert t.status == "manual"
     assert t.value == 13.7
@@ -63,7 +64,7 @@ def test_load_manual_broken_entry_is_missing(tmp_path):
         "topix_per: {value: 13.7, updated: 2026-11-12}\n"
         "sox_per: {value: null}\n",
     )
-    m = load_manual(p, today=date(2026, 11, 12))
+    m = load_manual(p, today=date(2026, 11, 12), overdue_days=OVERDUE)
     assert m["sox_per"].status == "missing"
     assert m["sox_per"].value is None
     assert m["topix_per"].status == "manual"
@@ -72,11 +73,11 @@ def test_load_manual_broken_entry_is_missing(tmp_path):
 
 def test_load_manual_broken_yaml_is_all_missing(tmp_path):
     p = _write(tmp_path, ":::")
-    m = load_manual(p, today=date(2026, 11, 12))
+    m = load_manual(p, today=date(2026, 11, 12), overdue_days=OVERDUE)
     assert set(m) == {"topix_per", "sox_per"}
     assert all(x.status == "missing" for x in m.values())
 
 
 def test_load_manual_absent_file_is_all_missing(tmp_path):
-    m = load_manual(tmp_path / "nope.yaml", today=date(2026, 11, 12))
+    m = load_manual(tmp_path / "nope.yaml", today=date(2026, 11, 12), overdue_days=OVERDUE)
     assert all(x.status == "missing" for x in m.values())
