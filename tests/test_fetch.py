@@ -1,3 +1,5 @@
+import datetime
+
 import pandas as pd
 import pytest
 import requests
@@ -142,3 +144,43 @@ def test_fetch_fear_greed_no_history_no_timestamp_raises(monkeypatch):
     monkeypatch.setattr(fetch_cnn, "get_with_retry", lambda *a, **k: FakeResp({"fear_and_greed": {"score": 50}}))
     with pytest.raises(RuntimeError):
         fetch_cnn.fetch_fear_greed()
+
+
+def _ticker_with_rows(dates, tz):
+    idx = pd.DatetimeIndex(dates, tz=tz)
+
+    class FakeTicker:
+        def __init__(self, sym):
+            self.sym = sym
+
+        def history(self, period, interval):
+            return pd.DataFrame({"Close": [float(i + 1) for i in range(len(idx))]}, index=idx)
+
+    return FakeTicker
+
+
+@pytest.mark.parametrize("sym, tz, before, after", [
+    # Tokyo closes 15:45 JST (= 06:45 UTC); New York closes 16:15 ET (= 21:15 UTC in November).
+    ("6146.T", "Asia/Tokyo", "2026-11-12 06:00", "2026-11-12 07:00"),
+    ("^N225", "Asia/Tokyo", "2026-11-12 06:00", "2026-11-12 07:00"),
+    ("NVDA", "America/New_York", "2026-11-12 20:00", "2026-11-12 21:30"),
+])
+def test_fetch_closes_drops_today_before_exchange_close(monkeypatch, sym, tz, before, after):
+    rows = ["2026-11-10 00:00", "2026-11-11 00:00", "2026-11-12 00:00"]
+    monkeypatch.setattr(fetch_yahoo.yf, "Ticker", _ticker_with_rows(rows, tz))
+    utc = datetime.timezone.utc
+
+    early = fetch_yahoo.fetch_closes([sym], now=datetime.datetime.fromisoformat(before).replace(tzinfo=utc))
+    assert [d.date().isoformat() for d in early[sym].index] == ["2026-11-10", "2026-11-11"]
+    assert list(early[sym]) == [1.0, 2.0]
+
+    late = fetch_yahoo.fetch_closes([sym], now=datetime.datetime.fromisoformat(after).replace(tzinfo=utc))
+    assert [d.date().isoformat() for d in late[sym].index] == ["2026-11-10", "2026-11-11", "2026-11-12"]
+
+
+def test_fetch_closes_keeps_rows_when_today_has_no_bar(monkeypatch):
+    rows = ["2026-11-10 00:00", "2026-11-11 00:00"]
+    monkeypatch.setattr(fetch_yahoo.yf, "Ticker", _ticker_with_rows(rows, "America/New_York"))
+    now = datetime.datetime(2026, 11, 12, 15, 0, tzinfo=datetime.timezone.utc)  # 10:00 ET
+    out = fetch_yahoo.fetch_closes(["NVDA"], now=now)
+    assert len(out["NVDA"]) == 2
