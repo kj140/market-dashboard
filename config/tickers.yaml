@@ -1,0 +1,31 @@
+tickers:
+  - symbol: VTI
+    name: VTI
+    area: us
+    note: 米国株全体。分散が効いており個別より値動きは穏やか
+  - symbol: 1321.T
+    name: NF日経225
+    area: jp
+    note: 日経平均連動。円高局面で下押しされやすい
+  - symbol: NVDA
+    name: エヌビディア
+    area: semi
+    note: AI向けGPUの中心銘柄。ハイパースケーラーの設備投資に直結
+  - symbol: SOXL
+    name: SOXL（半導体ブル3倍）
+    area: semi
+    leveraged: true
+    note: 3倍レバレッジ。下落・横ばいで目減りが大きい。警戒時は最初に減らし、大底時は買い増し候補
+  - symbol: 6146.T
+    name: ディスコ
+    area: semi
+    note: 後工程の製造装置。半導体の設備投資サイクルに遅れて動く
+  - symbol: 7735.T
+    name: SCREEN
+    area: semi
+    note: 前工程（洗浄）の製造装置。設備投資サイクルに連動
+  - symbol: 285A.T
+    name: キオクシア
+    area: semi
+    cautious_when_area_ratio_ge: 35
+    note: NANDメモリー。メモリー市況の振れが大きく、下落局面で先に崩れやすい

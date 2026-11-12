@@ -1,0 +1,104 @@
+# 点数表・段階表・判定表・閾値。帯は上から順に評価し、最後は {points: p}（それ以外）。
+# lt: x 未満 / le: x 以下。
+areas:
+  us: [fg, ndx_drop, us10y_streak]
+  jp: [n225_drop, topix_per, usdjpy_1m]
+  semi: [sox_combo, sox_per, fg, capex_gdp]
+  common: [gdp_spread, cpi_yoy, wti]
+
+bands:
+  fg:
+    - {le: 9, points: -3}
+    - {le: 10, points: -2}
+    - {le: 20, points: -1}
+    - {lt: 70, points: 0}
+    - {le: 80, points: 2}
+    - {points: 3}
+  ndx_drop:
+    - {lt: 10, points: 0}
+    - {le: 15, points: -1}
+    - {points: 0}
+  us10y_streak:
+    - {le: 0, points: 0}
+    - {le: 30, points: 1}
+    - {lt: 90, points: 0}
+    - {points: -1}
+  n225_drop:
+    - {lt: 10, points: 0}
+    - {le: 20, points: -1}
+    - {points: -2}
+  topix_per:
+    - {le: 13.7, points: -2}
+    - {le: 14.5, points: -1}
+    - {lt: 16.5, points: 0}
+    - {lt: 17.5, points: 1}
+    - {points: 2}
+  usdjpy_1m:
+    - {le: -5, points: 2}
+    - {le: -3, points: 1}
+    - {points: 0}
+  sox_per:
+    - {le: 15, points: -2}
+    - {le: 16, points: -1}
+    - {lt: 22, points: 0}
+    - {lt: 25, points: 1}
+    - {points: 2}
+  capex_gdp:
+    - {lt: 18, points: 0}
+    - {lt: 20, points: 1}
+    - {points: 3}
+  gdp_spread:
+    - {lt: 0, points: 3}
+    - {le: 0.5, points: 1}
+    - {points: 0}
+  cpi_yoy:
+    - {lt: 3.0, points: 0}
+    - {lt: 3.5, points: -1}
+    - {points: 1}
+  wti:
+    - {lt: 100, points: 0}
+    - {lt: 110, points: 1}
+    - {points: 2}
+
+sox_combo:
+  deep_drop: 28
+  days_min: 25
+  days_max: 45
+  deep_in_window: -3
+  deep_outside: -1
+  high_drop_lt: 5
+  high_fg_ge: 70
+  high_points: 2
+
+ratio_steps:
+  - {le: -6, ratio: 0}
+  - {le: -3, ratio: 10}
+  - {le: 1, ratio: 20}
+  - {le: 3, ratio: 35}
+  - {le: 5, ratio: 50}
+  - {le: 7, ratio: 70}
+  - {ratio: 90}
+
+verdict_table:
+  0: {normal: 買い増し, leveraged: 買い増し}
+  10: {normal: 買い増し, leveraged: 買い増し}
+  20: {normal: 保有, leveraged: 保有}
+  35: {normal: 保有, leveraged: 利確 1/3}
+  50: {normal: 利確 1/4, leveraged: 利確 1/2}
+  70: {normal: 利確 1/3, leveraged: 利確 1/2}
+  90: {normal: 利確 1/2, leveraged: 全利確}
+
+verdict_levels: [買い増し, 保有, 利確 1/4, 利確 1/3, 利確 1/2, 全利確]
+
+adjust:
+  deep_drop_pct: 30
+  deep_drop_max_area_ratio: 35
+
+stale_limits:
+  daily: 3
+  monthly: 25
+  quarterly: 70
+
+hold_missing_fraction: 0.5
+manual_overdue_days: 14
+stale_page_hours: 36
