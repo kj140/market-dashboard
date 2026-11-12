@@ -134,3 +134,7 @@ def test_hold_day_resets_pending_down():
     assert r3.on_hold and r3.ratio == r1.ratio and r3.pending_down is None
     r4 = evaluate_area("semi", bad, RULES, {"ratio": r3.ratio, "pending_down": r3.pending_down})
     assert r4.ratio == r1.ratio and r4.pending_down == 20
+
+
+def test_hysteresis_second_down_day_below_pending_uses_pending():
+    assert apply_hysteresis(10, 50, 20) == (20, None)

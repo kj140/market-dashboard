@@ -81,3 +81,18 @@ def test_load_manual_broken_yaml_is_all_missing(tmp_path):
 def test_load_manual_absent_file_is_all_missing(tmp_path):
     m = load_manual(tmp_path / "nope.yaml", today=date(2026, 11, 12), overdue_days=OVERDUE)
     assert all(x.status == "missing" for x in m.values())
+
+
+def test_load_manual_future_updated_is_overdue(tmp_path):
+    p = _write(
+        tmp_path,
+        "topix_per: {value: 13.7, updated: 2026-12-01}\n"
+        "sox_per: {value: 14.2, updated: 2026-11-12}\n",
+    )
+    m = load_manual(p, today=date(2026, 11, 12), overdue_days=OVERDUE)
+    t = m["topix_per"]
+    assert t.status == "manual"
+    assert t.value == 13.7
+    assert t.extra["days_since_update"] == -19
+    assert t.extra["overdue"] is True
+    assert m["sox_per"].extra == {"days_since_update": 0, "overdue": False}

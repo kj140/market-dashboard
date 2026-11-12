@@ -105,6 +105,7 @@ def load_manual(path: Path, today: date, overdue_days: int) -> dict[str, Metric]
         out[key] = Metric(
             key=key, label=MANUAL_KEYS[key], value=float(value),
             status="manual", as_of=updated.isoformat(), unit="倍",
-            extra={"days_since_update": days, "overdue": days > overdue_days},
+            # A future date is a typo, not a fresh value: flag it like an old one.
+            extra={"days_since_update": days, "overdue": days > overdue_days or days < 0},
         )
     return out
