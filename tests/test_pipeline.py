@@ -460,7 +460,25 @@ def test_one_market_index_missing_is_market_fetch_failure(tmp_path):
     assert latest["market_fetch"]["ok"] is False
     assert latest["evaluated"] is False
     assert latest["areas"] == good["areas"]
+    assert latest["market_dates"] == good["market_dates"]
     assert len(load_history(root / "docs" / "data" / "history.json")) == 1
+
+
+def test_one_index_down_with_unreadable_latest_does_not_advance_areas(tmp_path):
+    root = make_root(tmp_path)
+    hpath = root / "docs" / "data" / "history.json"
+    run_daily(root, make_fetchers("2026-11-11"), at(12), None)
+    run_daily(root, make_fetchers("2026-11-12"), at(13), None)
+    good = read_latest(root)
+    history_before = hpath.read_bytes()
+    (root / "docs" / "data" / "latest.json").write_text("{bad", encoding="utf-8")
+    run_daily(root, make_fetchers("2026-11-13", skip=("285A.T", "^GSPC")), at(14), None)
+    latest = read_latest(root)
+    assert latest["market_fetch"]["ok"] is False
+    assert latest["evaluated"] is False
+    assert latest["market_dates"] == good["market_dates"]
+    assert latest["areas"] == good["areas"]
+    assert hpath.read_bytes() == history_before
 
 
 def test_first_run_with_market_down_writes_no_history(tmp_path):

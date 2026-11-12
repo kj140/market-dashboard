@@ -212,16 +212,14 @@ def run_daily(
     last_entry = history[-1] if history else None
     generated_at = now_jst.isoformat(timespec="seconds")
 
-    market_ok = True
-    market_dates = {}
-    for market, sym in MARKETS.items():
-        d = _last_date(raw.closes.get(sym))
-        if d is None:
-            market_ok = False
-            if last_entry is not None:
-                # A failed fetch must not look like new market data.
-                d = (last_entry.get("market_dates") or {}).get(market)
-        market_dates[market] = d
+    market_dates = {m: _last_date(raw.closes.get(sym)) for m, sym in MARKETS.items()}
+    market_ok = all(d is not None for d in market_dates.values())
+    if not market_ok:
+        # A failed fetch must not look like new market data: both dates come from the last
+        # evaluation, so the page never names a close that was not evaluated (R18, R23).
+        prior = (last_entry or {}).get("market_dates") or (prev_latest or {}).get("market_dates")
+        if prior:
+            market_dates = {m: prior.get(m) for m in MARKETS}
     if not market_ok:
         log.error("market index fetch failed; keeping the last evaluation (R18)")
 
