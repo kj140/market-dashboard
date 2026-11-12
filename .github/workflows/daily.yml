@@ -1,0 +1,61 @@
+name: daily
+
+on:
+  schedule:
+    - cron: '30 21 * * *'   # 毎日 06:30 JST (UTC 21:30)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'daily = 毎日の更新 / backfill = 過去分のさかのぼり計算（初回のみ）'
+        type: choice
+        options:
+          - daily
+          - backfill
+        default: daily
+
+permissions:
+  contents: write
+
+concurrency: daily
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Run
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFY_TO: ${{ secrets.NOTIFY_TO }}
+          PAGE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: python -m dash ${{ inputs.mode || 'daily' }}
+
+      # 通知の送信に失敗すると上の Run は赤で終わるが、データは先に書き出されているので
+      # 必ずコミットする。ジョブ自体は赤のまま終わる（GitHub から失敗メールが届く）。
+      - name: Commit data
+        if: always()
+        run: |
+          if [ -z "$(git status --porcelain docs/data)" ]; then
+            echo "docs/data に変更なし"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data
+          git commit -m "data: update $(date -u +%Y-%m-%dT%H:%MZ)"
+          git pull --rebase
+          git push
