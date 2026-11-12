@@ -24,10 +24,9 @@ def fetch_fear_greed() -> pd.Series:
         s = pd.Series([float(p["y"]) for p in points], index=idx)
         return s[~s.index.duplicated(keep="last")].sort_index()
     fg = payload["fear_and_greed"]
-    if fg.get("timestamp"):
-        ts = pd.Timestamp(fg["timestamp"])
-        if ts.tzinfo is not None:
-            ts = ts.tz_convert("UTC").tz_localize(None)
-    else:
-        ts = pd.Timestamp.now()
+    if not fg.get("timestamp"):
+        raise RuntimeError("CNN fear and greed has no history and no timestamp")
+    ts = pd.Timestamp(fg["timestamp"])
+    if ts.tzinfo is not None:
+        ts = ts.tz_convert("UTC").tz_localize(None)
     return pd.Series([float(fg["score"])], index=pd.DatetimeIndex([ts.normalize()]))

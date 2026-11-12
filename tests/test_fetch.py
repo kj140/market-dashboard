@@ -123,3 +123,22 @@ def test_fetch_closes_skips_failed_symbol(monkeypatch):
     assert list(out) == ["^SOX"]
     assert out["^SOX"].index.tz is None
     assert len(out["^SOX"]) == 2
+
+
+def test_fetch_fred_missing_observations_raises(monkeypatch):
+    monkeypatch.setattr(fetch_fred, "get_with_retry", lambda *a, **k: FakeResp({"error_message": "bad"}))
+    with pytest.raises(RuntimeError):
+        fetch_fred.fetch_fred("DGS10", "k")
+
+
+def test_fetch_fred_all_dots_raises(monkeypatch):
+    payload = {"observations": [{"date": "2026-10-01", "value": "."}]}
+    monkeypatch.setattr(fetch_fred, "get_with_retry", lambda *a, **k: FakeResp(payload))
+    with pytest.raises(RuntimeError):
+        fetch_fred.fetch_fred("DGS10", "k")
+
+
+def test_fetch_fear_greed_no_history_no_timestamp_raises(monkeypatch):
+    monkeypatch.setattr(fetch_cnn, "get_with_retry", lambda *a, **k: FakeResp({"fear_and_greed": {"score": 50}}))
+    with pytest.raises(RuntimeError):
+        fetch_cnn.fetch_fear_greed()
