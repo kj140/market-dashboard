@@ -143,8 +143,8 @@ def test_send_gmail_missing_env_does_not_raise(monkeypatch):
         raise AssertionError("must not connect")
 
     monkeypatch.setattr(smtplib, "SMTP_SSL", boom)
-    send_gmail("s", "b", {})
-    send_gmail("s", "b", {"GMAIL_ADDRESS": "a@example.test", "GMAIL_APP_PASSWORD": "x"})
+    assert send_gmail("s", "b", {}) is False
+    assert send_gmail("s", "b", {"GMAIL_ADDRESS": "a@example.test", "GMAIL_APP_PASSWORD": "x"}) is False
 
 
 def test_send_gmail_sends_once(monkeypatch):
@@ -168,7 +168,7 @@ def test_send_gmail_sends_once(monkeypatch):
 
     monkeypatch.setattr(smtplib, "SMTP_SSL", FakeSMTP)
     env = {"GMAIL_ADDRESS": "from@example.test", "GMAIL_APP_PASSWORD": "secret-pw", "NOTIFY_TO": "to@example.test"}
-    send_gmail("【判定変更】テスト", "本文です", env)
+    assert send_gmail("【判定変更】テスト", "本文です", env) is True
     assert calls["init"] == [("smtp.gmail.com", 465)]
     assert calls["login"] == [("from@example.test", "secret-pw")]
     assert len(calls["sent"]) == 1
@@ -185,5 +185,5 @@ def test_send_gmail_failure_does_not_log_secrets(monkeypatch, caplog):
 
     monkeypatch.setattr(smtplib, "SMTP_SSL", BadSMTP)
     env = {"GMAIL_ADDRESS": "from@example.test", "GMAIL_APP_PASSWORD": "secret-pw", "NOTIFY_TO": "to@example.test"}
-    send_gmail("s", "b", env)  # must not raise
+    assert send_gmail("s", "b", env) is False  # must not raise
     assert "secret-pw" not in caplog.text and "to@example.test" not in caplog.text

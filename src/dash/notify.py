@@ -108,14 +108,14 @@ def build_notifications(prev: dict | None, curr: dict, page_url: str) -> list[tu
     return out
 
 
-def send_gmail(subject: str, body: str, env: Mapping[str, str]) -> None:
-    """Gmail(SMTP over SSL)で送る。設定が足りなければ警告して送らない。失敗しても例外にしない。"""
+def send_gmail(subject: str, body: str, env: Mapping[str, str]) -> bool:
+    """Gmail(SMTP over SSL)で送る。送れたら True。設定不足・送信失敗は例外にせず False を返す。"""
     address = env.get("GMAIL_ADDRESS")
     password = env.get("GMAIL_APP_PASSWORD")
     to = env.get("NOTIFY_TO")
     if not (address and password and to):
         log.warning("Gmail の設定(GMAIL_ADDRESS / GMAIL_APP_PASSWORD / NOTIFY_TO)が不足しているため通知を送りません")
-        return
+        return False
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = address
@@ -127,3 +127,5 @@ def send_gmail(subject: str, body: str, env: Mapping[str, str]) -> None:
             smtp.send_message(msg)
     except Exception as exc:  # 認証情報を含み得るので型名だけ記録する
         log.error("Gmail の送信に失敗しました: %s", type(exc).__name__)
+        return False
+    return True
