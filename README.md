@@ -9,7 +9,7 @@
 すべて GitHub の Web 画面で行えます。パスワードやキーの入力はご自身でお願いします。
 
 1. **公開リポジトリを作る**
-   GitHub で新しいリポジトリを **Public** で作り、このコードをブランチ `main` に push します。
+   GitHub で新しいリポジトリを **Public** で作り、このコードをブランチ `main` に push します。手元のブランチは `master` なので、リモートを登録したあと `git push -u origin master:main` で送ります。
 2. **FRED の API キーを取る**
    https://fredaccount.stlouisfed.org/apikeys でアカウントを作り（無料）、API キーを発行します。
 3. **Gmail のアプリパスワードを作る**
@@ -24,6 +24,8 @@
    | `GMAIL_APP_PASSWORD` | 手順3のアプリパスワード |
    | `NOTIFY_TO` | 通知を受け取るアドレス |
 
+   Gmail の3つ（`GMAIL_ADDRESS`・`GMAIL_APP_PASSWORD`・`NOTIFY_TO`）は**任意**です。登録しなければメールは一切送られず、ページの更新はそのまま行われ、Actions も緑で終わります（手順3も不要）。
+
 5. **GitHub Pages を有効にする**
    Settings → Pages → Build and deployment で Source を「Deploy from a branch」、Branch を `main`、フォルダを `/docs` にして Save します。ページの URL は `https://<ユーザー名>.github.io/<リポジトリ名>/` です。
 6. **初回の実行（Actions の画面から手動で）**
@@ -31,6 +33,10 @@
    1. まず `mode` を **backfill** にして実行（過去1年分の判定をさかのぼって計算。通知は送りません）
    2. 完了したら `mode` を **daily** にしてもう一度実行
    以降は毎朝自動で動きます。
+
+   - backfill は**最初の1回だけ**の手順です。daily が一度でも履歴を書いたあとは、backfill を実行しても何も書き換えずに失敗（赤）で終わります。やり直したいときは `docs/data/history.json` を削除してから backfill → daily の順に実行し直してください。
+   - さかのぼり計算では手入力の予想PERを使わないため、セットアップ直後の最初の数回の daily で比率が1回変わり、【判定変更】が届くことがあります。比率が下がる方向は2回連続の評価日で確定するルール（設計書 7.2）なので、数日遅れて届くこともあります。故障ではありません。
+   - daily を市場の取引時間中に手動で実行しても、まだ確定していない当日の値は使いません（東京は 15:45、ニューヨークは現地 16:15 を過ぎるまで当日分を除外）。
 7. **スマホのホーム画面に追加**
    スマホでページを開き、ブラウザの共有メニューから「ホーム画面に追加」を選びます。
 
@@ -74,6 +80,7 @@ sox_per: {value: 14.2, updated: 2026-11-12}
 ## 失敗したとき
 
 - **Actions の daily が赤（×）になった**: メール送信に失敗したか、プログラムが落ちたかのどちらかです。メールの失敗の場合でも、データの更新と保存は先に済んでいるので、ページは更新されています。Actions の該当実行を開いてログを確認してください。Gmail の場合はアプリパスワードや Secrets の入力ミスが多い原因です。
+- **ページに「市場データを取得できていません」の赤い帯が出た**: Yahoo Finance から株価指数を取れていません。比率と判定は帯に書かれた日の終値時点のまま据え置かれ、取れなくなった日と回復した日にそれぞれ1通メールが届きます。多くは一時的なもので、翌日以降に自然に戻ります。
 - 赤になると GitHub から失敗の通知メールが届きます（通知設定による）。
 - `test` ワークフローは push のたびにテストを実行します。
 
@@ -83,5 +90,5 @@ sox_per: {value: 14.2, updated: 2026-11-12}
 pip install -r requirements.txt && pip install -e .
 python -m pytest -q
 python -m dash daily            # 日次実行（Gmail 用の環境変数がなければ通知しない）
-python -m dash backfill --days 365
+python -m dash backfill --days 365   # 初回のみ。daily の履歴があると何もせず終了コード1
 ```
