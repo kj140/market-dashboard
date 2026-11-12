@@ -321,3 +321,15 @@ def test_non_evaluation_run_at_stale_limit_keeps_stale_and_sends_nothing(tmp_pat
     assert latest["metrics"]["fg"] == before
     assert result["notifications"] == []
     assert sent == []
+
+
+def test_latest_carries_display_values_on_every_run(tmp_path):
+    root = make_root(tmp_path)
+    run_daily(root, make_fetchers("2026-11-06"), at(6), None)
+    latest = read_latest(root)
+    assert latest["evaluated"] is True
+    assert latest["display"] == {"stale_page_hours": 36, "normal_ratio": 20}
+    run_daily(root, make_fetchers("2026-11-06"), at(7), None)
+    latest = read_latest(root)
+    assert latest["evaluated"] is False
+    assert latest["display"] == {"stale_page_hours": 36, "normal_ratio": 20}

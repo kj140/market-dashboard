@@ -342,5 +342,9 @@
       "prev_verdict": "買い増し"
     }
   ],
-  "page_url": ""
+  "page_url": "",
+  "display": {
+    "stale_page_hours": 36,
+    "normal_ratio": 20
+  }
 }

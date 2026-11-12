@@ -1,10 +1,5 @@
 'use strict';
 
-// Display-only constants. They mirror config/rules.yaml (stale_page_hours, and
-// the ratio of the "-2 〜 +1" band), which the page cannot read directly.
-const STALE_PAGE_HOURS = 36;
-const NORMAL_RATIO = 20;
-
 const AREAS = [
   { key: 'us', flag: '🇺🇸', name: '米国' },
   { key: 'jp', flag: '🇯🇵', name: '日本' },
@@ -101,6 +96,14 @@ function verdictClass(v) {
   return 'none';
 }
 
+// Values from config/rules.yaml that the pipeline copies into latest.display.
+// Returns null when absent (older latest.json): callers then skip the feature.
+function displayValue(key) {
+  const d = state.latest.display;
+  const v = d ? d[key] : undefined;
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
+}
+
 function loadTab() {
   try { return localStorage.getItem(TAB_STORAGE_KEY); } catch (e) { return null; }
 }
@@ -117,7 +120,8 @@ function renderHeader() {
   $('updated').textContent = `最終更新 ${label || '不明'}`;
   const ageHours = (Date.now() - new Date(gen).getTime()) / 3600000;
   const banner = $('stale');
-  if (!label || ageHours > STALE_PAGE_HOURS) {
+  const staleHours = displayValue('stale_page_hours');
+  if (staleHours !== null && (!label || ageHours > staleHours)) {
     banner.textContent = `更新が止まっています（最終 ${label || '不明'}）`;
     banner.hidden = false;
   } else {
@@ -229,14 +233,16 @@ function renderNotes() {
 const normalLabelPlugin = {
   id: 'normalLabel',
   afterDatasetsDraw(chart) {
-    const y = chart.scales.y.getPixelForValue(NORMAL_RATIO);
+    const normal = displayValue('normal_ratio');
+    if (normal === null) return;
+    const y = chart.scales.y.getPixelForValue(normal);
     const { ctx, chartArea } = chart;
     ctx.save();
     ctx.fillStyle = COLORS.tick;
     ctx.font = '11px sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(`普段 ${NORMAL_RATIO}%`, chartArea.right - 2, y - 3);
+    ctx.fillText(`普段 ${normal}%`, chartArea.right - 2, y - 3);
     ctx.restore();
   },
 };
@@ -251,12 +257,11 @@ function windowEntries() {
 }
 
 function renderChart() {
-  const box = $('chart').parentElement;
   if (state.chart) { state.chart.destroy(); state.chart = null; }
-  if (typeof window.Chart === 'undefined') {
-    box.replaceChildren(el('p', 'empty', 'グラフを表示できませんでした'));
-    return;
-  }
+  const noChart = typeof window.Chart === 'undefined';
+  $('chart').hidden = noChart;
+  $('chart-error').hidden = !noChart;
+  if (noChart) return;
   const rows = windowEntries();
   const area = state.area;
   const labels = rows.map((e) => e.date);
@@ -304,16 +309,19 @@ function renderChart() {
     segment: { borderColor: segColor, borderDash: segDash },
     order: 10,
   });
-  datasets.push({
-    label: 'normal',
-    data: rows.map(() => NORMAL_RATIO),
-    borderColor: COLORS.normal,
-    borderWidth: 1,
-    borderDash: [4, 3],
-    pointRadius: 0,
-    pointHoverRadius: 0,
-    order: 11,
-  });
+  const normal = displayValue('normal_ratio');
+  if (normal !== null) {
+    datasets.push({
+      label: 'normal',
+      data: rows.map(() => normal),
+      borderColor: COLORS.normal,
+      borderWidth: 1,
+      borderDash: [4, 3],
+      pointRadius: 0,
+      pointHoverRadius: 0,
+      order: 11,
+    });
+  }
   const mainIndex = datasets.findIndex((d) => d.label === 'ratio');
 
   const shortRange = state.days <= 31;

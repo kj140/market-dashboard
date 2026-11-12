@@ -151,3 +151,5 @@ body {
 .mt .warn { color: var(--orange); }
 
 .ft { text-align: center; color: var(--mut); font-size: 11px; padding: 12px 0 24px; }
+
+[hidden] { display: none !important; }

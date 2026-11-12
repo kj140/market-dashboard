@@ -26,7 +26,7 @@ from .metrics import METRIC_FREQ, RawData, carry_forward, compute_metrics
 from .models import AreaResult, Metric, TickerResult
 from .notify import build_notifications
 from .reasons import area_reason, ticker_reason
-from .scoring import evaluate_area
+from .scoring import evaluate_area, points_to_ratio
 from .verdict import ticker_verdict
 
 log = logging.getLogger(__name__)
@@ -242,6 +242,11 @@ def run_daily(
         "areas": {},
         "tickers": [],
         "page_url": os.environ.get("PAGE_URL", ""),
+        # Values the page needs but cannot read from config/rules.yaml itself.
+        "display": {
+            "stale_page_hours": rules["stale_page_hours"],
+            "normal_ratio": points_to_ratio(0, rules["ratio_steps"]),
+        },
     }
 
     if evaluated:
