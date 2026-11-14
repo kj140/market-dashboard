@@ -75,5 +75,16 @@ def ratio_pct(numer: pd.Series, denom: pd.Series) -> float | None:
     return round(float(n.loc[latest]) / dv * 100, 1)
 
 
+def ma_gap_pct(series: pd.Series, window: int) -> float | None:
+    """Last value's % distance from its trailing `window`-row simple moving average."""
+    s = _clean(series)
+    if len(s) < window:
+        return None
+    ma = float(s.iloc[-window:].mean())
+    if ma == 0:
+        return None
+    return round((float(s.iloc[-1]) / ma - 1) * 100, 1)
+
+
 def as_of(series: pd.Series, d: date) -> pd.Series:
     return series[series.index <= pd.Timestamp(d)]

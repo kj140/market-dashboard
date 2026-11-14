@@ -6,6 +6,7 @@ from dash.indicators import (
     as_of,
     change_pct_days,
     drawdown_from_high,
+    ma_gap_pct,
     ratio_pct,
     streak_above,
     yoy_pct,
@@ -71,6 +72,19 @@ def test_ratio_pct_aligns_dates():
     pnfi = pd.Series([14.2, 15.0], index=pd.DatetimeIndex(["2025-07-01", "2025-10-01"]))
     gdp = pd.Series([100.0], index=pd.DatetimeIndex(["2025-07-01"]))
     assert ratio_pct(pnfi, gdp) == 14.2
+
+
+def test_ma_gap_pct():
+    # 4 rows at 100 then 150: MA(5) = 110, last 150 -> +36.4%
+    assert ma_gap_pct(_bdays([100, 100, 100, 100, 150]), 5) == 36.4
+    # only the trailing window counts
+    assert ma_gap_pct(_bdays([1000, 100, 100, 100, 100, 100]), 5) == 0.0
+    assert ma_gap_pct(_bdays([100, 90]), 2) == -5.3
+
+
+def test_ma_gap_pct_short_history_none():
+    assert ma_gap_pct(_bdays([100, 100, 100]), 5) is None
+    assert ma_gap_pct(_bdays([]), 5) is None
 
 
 def test_as_of_truncates():

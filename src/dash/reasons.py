@@ -30,6 +30,9 @@ def _body(m: Metric) -> str:
         if days is not None:
             s += f"（日柄{days}日）"
         return s
+    if m.key in ("ndx_gap", "n225_gap", "sox_gap"):
+        name = {"ndx_gap": "NASDAQ100", "n225_gap": "日経平均", "sox_gap": "SOX"}[m.key]
+        return f"{name} 200日線比{v:+.1f}%"
     if m.key == "fg":
         return f"Fear & Greed {_num(v, 0)}"
     if m.key == "us10y_streak":

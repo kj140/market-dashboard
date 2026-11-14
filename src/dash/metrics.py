@@ -13,6 +13,7 @@ from .indicators import (
     as_of as truncate_asof,
     change_pct_days,
     drawdown_from_high,
+    ma_gap_pct,
     ratio_pct,
     streak_above,
     yoy_pct,
@@ -24,12 +25,17 @@ US10Y_STREAK_LEVEL = 4.5
 GDP_YOY_PERIODS = 4
 CPI_YOY_PERIODS = 12
 USDJPY_DAYS = 30
+MA_WINDOW = 200  # trading days for the "distance from moving average" overheat gauge
+MA_GAP_SYMBOLS = (("ndx_gap", "^NDX"), ("n225_gap", "^N225"), ("sox_gap", "^SOX"))
 
 METRIC_FREQ: dict[str, str] = {
     "fg": "daily",
     "ndx_drop": "daily",
     "n225_drop": "daily",
     "sox_drop": "daily",
+    "ndx_gap": "daily",
+    "n225_gap": "daily",
+    "sox_gap": "daily",
     "us10y": "daily",
     "us10y_streak": "daily",
     "wti": "daily",
@@ -46,6 +52,9 @@ METRIC_LABELS: dict[str, tuple[str, str]] = {
     "ndx_drop": ("NASDAQ100 高値からの下落率", "%"),
     "n225_drop": ("日経平均 高値からの下落率", "%"),
     "sox_drop": ("SOX 高値からの下落率", "%"),
+    "ndx_gap": ("NASDAQ100 200日線からの乖離", "%"),
+    "n225_gap": ("日経平均 200日線からの乖離", "%"),
+    "sox_gap": ("SOX 200日線からの乖離", "%"),
     "us10y": ("米10年債利回り", "%"),
     "us10y_streak": ("米10年債 4.5%以上の連続日数", "日"),
     "gdp_yoy": ("名目GDP 前年同期比", "%"),
@@ -115,6 +124,11 @@ def compute_metrics(
             continue
         extra = {"days": dd[1], "peak_date": dd[2]} if key == "sox_drop" else {}
         out[key] = _live(key, dd[0], _last(s), extra)
+
+    for key, sym in MA_GAP_SYMBOLS:
+        s = closes.get(sym)
+        gap = ma_gap_pct(s, MA_WINDOW) if s is not None else None
+        out[key] = _live(key, gap, _last(s) if s is not None else None)
 
     dgs = fred.get("DGS10")
     if dgs is not None:

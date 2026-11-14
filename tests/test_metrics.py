@@ -42,8 +42,20 @@ def test_compute_metrics_all_live():
     assert m["gdp_spread"].value == pytest.approx(m["gdp_yoy"].value - m["us10y"].value)
     assert m["fg"].value == 17.0
     assert m["fg"].as_of == "2026-11-10"
-    for key in ("effr", "wti", "usdjpy_1m", "capex_gdp", "cpi_yoy", "n225_drop", "ndx_drop"):
+    for key in ("effr", "wti", "usdjpy_1m", "capex_gdp", "cpi_yoy", "n225_drop", "ndx_drop",
+                "ndx_gap", "n225_gap", "sox_gap"):
         assert key in m
+    # N225 rises 0.2/day for 300 rows: last 359.8, MA200 of rows 100..299 = 339.9 -> +5.9%
+    assert m["n225_gap"].value == 5.9
+    assert m["n225_gap"].unit == "%"
+
+
+def test_compute_metrics_ma_gap_missing_when_history_short():
+    raw = full_raw()
+    raw.closes["^SOX"] = daily([100.0] * 150)
+    m = compute_metrics(raw, None, {})
+    assert m["sox_gap"].status == "missing" and m["sox_gap"].value is None
+    assert m["ndx_gap"].status == "live"
 
 
 def test_compute_metrics_fred_missing():

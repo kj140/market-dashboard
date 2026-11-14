@@ -1,9 +1,9 @@
 # 点数表・段階表・判定表・閾値。帯は上から順に評価し、最後は {points: p}（それ以外）。
 # lt: x 未満 / le: x 以下。
 areas:
-  us: [fg, ndx_drop, us10y_streak]
-  jp: [n225_drop, topix_per, usdjpy_1m]
-  semi: [sox_combo, sox_per, fg, capex_gdp]
+  us: [fg, ndx_drop, us10y_streak, ndx_gap]
+  jp: [n225_drop, topix_per, usdjpy_1m, n225_gap]
+  semi: [sox_combo, sox_per, fg, capex_gdp, sox_gap]
   common: [gdp_spread, cpi_yoy, wti]
 
 bands:
@@ -59,13 +59,34 @@ bands:
     - {lt: 100, points: 0}
     - {lt: 110, points: 1}
     - {points: 2}
+  # 200日移動平均からの乖離（%）。上がりすぎ（天井）と売られすぎ（底）の両方を測る。
+  # 2026-11 調整：SOX が約2倍になった 2026-06 の高値で半導体70%、-38% の 2026-11 で10% になるように設定。
+  sox_gap:
+    - {le: -15, points: -2}
+    - {le: -5, points: -1}
+    - {lt: 30, points: 0}
+    - {lt: 45, points: 2}
+    - {lt: 60, points: 4}
+    - {points: 5}
+  ndx_gap:
+    - {le: -5, points: -1}
+    - {lt: 10, points: 0}
+    - {lt: 15, points: 2}
+    - {lt: 18, points: 3}
+    - {points: 4}
+  n225_gap:
+    - {le: -5, points: -1}
+    - {lt: 20, points: 0}
+    - {lt: 28, points: 2}
+    - {lt: 33, points: 3}
+    - {points: 4}
 
 sox_combo:
   deep_drop: 28
   days_min: 25
   days_max: 45
-  deep_in_window: -3
-  deep_outside: -1
+  deep_in_window: -4
+  deep_outside: -3
   high_drop_lt: 5
   high_fg_ge: 70
   high_points: 2
@@ -73,7 +94,7 @@ sox_combo:
 ratio_steps:
   - {le: -6, ratio: 0}
   - {le: -3, ratio: 10}
-  - {le: 1, ratio: 20}
+  - {le: 2, ratio: 20}
   - {le: 3, ratio: 35}
   - {le: 5, ratio: 50}
   - {le: 7, ratio: 70}
