@@ -1,0 +1,352 @@
+{
+  "generated_at": "2026-11-14T14:52:43+09:00",
+  "evaluated": true,
+  "market_dates": {
+    "us": "2026-11-13",
+    "jp": "2026-11-13"
+  },
+  "market_fetch": {
+    "ok": true,
+    "failed_since": null
+  },
+  "metrics": {
+    "fg": {
+      "label": "Fear & Greed",
+      "value": 38.6,
+      "status": "live",
+      "as_of": "2026-11-13",
+      "unit": "",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "ndx_drop": {
+      "label": "NASDAQ100 高値からの下落率",
+      "value": 10.5,
+      "status": "live",
+      "as_of": "2026-11-13",
+      "unit": "%",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "n225_drop": {
+      "label": "日経平均 高値からの下落率",
+      "value": 15.5,
+      "status": "live",
+      "as_of": "2026-11-13",
+      "unit": "%",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "sox_drop": {
+      "label": "SOX 高値からの下落率",
+      "value": 30.7,
+      "status": "live",
+      "as_of": "2026-11-13",
+      "unit": "%",
+      "stale_evals": 0,
+      "extra": {
+        "days": 102,
+        "peak_date": "2026-06-22"
+      }
+    },
+    "us10y": {
+      "label": "米10年債利回り",
+      "value": 5.1,
+      "status": "live",
+      "as_of": "2026-11-12",
+      "unit": "%",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "us10y_streak": {
+      "label": "米10年債 4.5%以上の連続日数",
+      "value": 90.0,
+      "status": "live",
+      "as_of": "2026-11-12",
+      "unit": "日",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "gdp_yoy": {
+      "label": "名目GDP 前年同期比",
+      "value": 5.87,
+      "status": "live",
+      "as_of": "2026-07-01",
+      "unit": "%",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "gdp_spread": {
+      "label": "名目GDP成長率 − 米10年債利回り",
+      "value": 0.77,
+      "status": "live",
+      "as_of": "2026-07-01",
+      "unit": "%",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "cpi_yoy": {
+      "label": "CPI 前年同月比",
+      "value": 4.08,
+      "status": "live",
+      "as_of": "2026-10-01",
+      "unit": "%",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "wti": {
+      "label": "WTI 原油",
+      "value": 88.55999755859375,
+      "status": "live",
+      "as_of": "2026-11-13",
+      "unit": "ドル",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "usdjpy_1m": {
+      "label": "ドル円 1か月変化率",
+      "value": 0.98,
+      "status": "live",
+      "as_of": "2026-11-13",
+      "unit": "%",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "capex_gdp": {
+      "label": "民間設備投資 / GDP",
+      "value": 15.0,
+      "status": "live",
+      "as_of": "2026-07-01",
+      "unit": "%",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "effr": {
+      "label": "実効FF金利",
+      "value": 3.88,
+      "status": "live",
+      "as_of": "2026-11-12",
+      "unit": "%",
+      "stale_evals": 0,
+      "extra": {}
+    },
+    "topix_per": {
+      "label": "TOPIX 予想PER",
+      "value": 13.7,
+      "status": "manual",
+      "as_of": "2026-11-12",
+      "unit": "倍",
+      "stale_evals": 0,
+      "extra": {
+        "days_since_update": 2,
+        "overdue": false
+      }
+    },
+    "sox_per": {
+      "label": "SOX 予想PER",
+      "value": 14.2,
+      "status": "manual",
+      "as_of": "2026-11-12",
+      "unit": "倍",
+      "stale_evals": 0,
+      "extra": {
+        "days_since_update": 2,
+        "overdue": false
+      }
+    }
+  },
+  "areas": {
+    "us": {
+      "points": -1,
+      "ratio": 20,
+      "raw_ratio": 20,
+      "ratio_excl_manual": 20,
+      "on_hold": false,
+      "pending_down": null,
+      "contributions": [
+        {
+          "key": "fg",
+          "points": 0
+        },
+        {
+          "key": "ndx_drop",
+          "points": -1
+        },
+        {
+          "key": "us10y_streak",
+          "points": -1
+        },
+        {
+          "key": "gdp_spread",
+          "points": 0
+        },
+        {
+          "key": "cpi_yoy",
+          "points": 1
+        },
+        {
+          "key": "wti",
+          "points": 0
+        }
+      ],
+      "missing": [],
+      "reason": "NASDAQ100 高値比-10.5%／米10年債4.5%以上 90日連続／CPI 前年比 4.1%",
+      "prev_ratio": 20
+    },
+    "jp": {
+      "points": -2,
+      "ratio": 20,
+      "raw_ratio": 20,
+      "ratio_excl_manual": 20,
+      "on_hold": false,
+      "pending_down": null,
+      "contributions": [
+        {
+          "key": "n225_drop",
+          "points": -1
+        },
+        {
+          "key": "topix_per",
+          "points": -2
+        },
+        {
+          "key": "usdjpy_1m",
+          "points": 0
+        },
+        {
+          "key": "gdp_spread",
+          "points": 0
+        },
+        {
+          "key": "cpi_yoy",
+          "points": 1
+        },
+        {
+          "key": "wti",
+          "points": 0
+        }
+      ],
+      "missing": [],
+      "reason": "TOPIX 予想PER 13.7倍（手入力 11/12）／日経平均 高値比-15.5%／CPI 前年比 4.1%",
+      "prev_ratio": 20
+    },
+    "semi": {
+      "points": -2,
+      "ratio": 20,
+      "raw_ratio": 20,
+      "ratio_excl_manual": 20,
+      "on_hold": false,
+      "pending_down": null,
+      "contributions": [
+        {
+          "key": "sox_combo",
+          "points": -1
+        },
+        {
+          "key": "sox_per",
+          "points": -2
+        },
+        {
+          "key": "fg",
+          "points": 0
+        },
+        {
+          "key": "capex_gdp",
+          "points": 0
+        },
+        {
+          "key": "gdp_spread",
+          "points": 0
+        },
+        {
+          "key": "cpi_yoy",
+          "points": 1
+        },
+        {
+          "key": "wti",
+          "points": 0
+        }
+      ],
+      "missing": [],
+      "reason": "SOX 予想PER 14.2倍（手入力 11/12）／SOX 高値比-30.7%（日柄102日）／CPI 前年比 4.1%",
+      "prev_ratio": 20
+    }
+  },
+  "tickers": [
+    {
+      "symbol": "VTI",
+      "name": "VTI",
+      "area": "us",
+      "price": 371.1099853515625,
+      "drop_pct": 3.2,
+      "verdict": "保有",
+      "reason": "高値から-3.2%。NASDAQ100 高値比-10.5%／米10年債4.5%以上 90日連続。米国株全体。分散が効いており個別より値動きは穏やか。",
+      "prev_verdict": "保有"
+    },
+    {
+      "symbol": "1321.T",
+      "name": "NF日経225",
+      "area": "jp",
+      "price": 636.4000244140625,
+      "drop_pct": 15.3,
+      "verdict": "保有",
+      "reason": "高値から-15.3%。TOPIX 予想PER 13.7倍（手入力 11/12）／日経平均 高値比-15.5%。日経平均連動。円高局面で下押しされやすい。",
+      "prev_verdict": "保有"
+    },
+    {
+      "symbol": "NVDA",
+      "name": "エヌビディア",
+      "area": "semi",
+      "price": 162.85000610351562,
+      "drop_pct": 31.9,
+      "verdict": "買い増し",
+      "reason": "高値から-31.9%。SOX 予想PER 14.2倍（手入力 11/12）／SOX 高値比-30.7%（日柄102日）。AI向けGPUの中心銘柄。ハイパースケーラーの設備投資に直結。高値から30%以上下落しており1段階強気寄りに補正。",
+      "prev_verdict": "買い増し"
+    },
+    {
+      "symbol": "SOXL",
+      "name": "SOXL（半導体ブル3倍）",
+      "area": "semi",
+      "price": 58.31999969482422,
+      "drop_pct": 80.6,
+      "verdict": "買い増し",
+      "reason": "高値から-80.6%。SOX 予想PER 14.2倍（手入力 11/12）／SOX 高値比-30.7%（日柄102日）。3倍レバレッジ。下落・横ばいで目減りが大きい。警戒時は最初に減らし、大底時は買い増し候補。高値から30%以上下落しており1段階強気寄りに補正。",
+      "prev_verdict": "買い増し"
+    },
+    {
+      "symbol": "6146.T",
+      "name": "ディスコ",
+      "area": "semi",
+      "price": 47470.0,
+      "drop_pct": 46.2,
+      "verdict": "買い増し",
+      "reason": "高値から-46.2%。SOX 予想PER 14.2倍（手入力 11/12）／SOX 高値比-30.7%（日柄102日）。後工程の製造装置。半導体の設備投資サイクルに遅れて動く。高値から30%以上下落しており1段階強気寄りに補正。",
+      "prev_verdict": "買い増し"
+    },
+    {
+      "symbol": "7735.T",
+      "name": "SCREEN",
+      "area": "semi",
+      "price": 8564.0,
+      "drop_pct": 55.9,
+      "verdict": "買い増し",
+      "reason": "高値から-55.9%。SOX 予想PER 14.2倍（手入力 11/12）／SOX 高値比-30.7%（日柄102日）。前工程（洗浄）の製造装置。設備投資サイクルに連動。高値から30%以上下落しており1段階強気寄りに補正。",
+      "prev_verdict": "買い増し"
+    },
+    {
+      "symbol": "285A.T",
+      "name": "キオクシア",
+      "area": "semi",
+      "price": 9091.0,
+      "drop_pct": 74.9,
+      "verdict": "買い増し",
+      "reason": "高値から-74.9%。SOX 予想PER 14.2倍（手入力 11/12）／SOX 高値比-30.7%（日柄102日）。NANDメモリー。メモリー市況の振れが大きく、下落局面で先に崩れやすい。高値から30%以上下落しており1段階強気寄りに補正。",
+      "prev_verdict": "買い増し"
+    }
+  ],
+  "page_url": "https://kj140.github.io/market-dashboard/",
+  "display": {
+    "stale_page_hours": 36,
+    "normal_ratio": 20
+  }
+}

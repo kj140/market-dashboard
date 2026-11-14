@@ -11095,8 +11095,8 @@
       }
     },
     {
-      "date": "2026-11-13",
-      "backfill": true,
+      "date": "2026-11-14",
+      "backfill": false,
       "market_dates": {
         "us": "2026-11-13",
         "jp": "2026-11-13"
@@ -11114,7 +11114,7 @@
           "ratio": 20,
           "raw_ratio": 20,
           "ratio_excl_manual": 20,
-          "points": 0,
+          "points": -2,
           "on_hold": false,
           "pending_down": null
         },
@@ -11122,7 +11122,7 @@
           "ratio": 20,
           "raw_ratio": 20,
           "ratio_excl_manual": 20,
-          "points": 0,
+          "points": -2,
           "on_hold": false,
           "pending_down": null
         }
