@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-14T15:25:37+09:00",
-  "evaluated": true,
+  "generated_at": "2026-11-15T10:13:48+09:00",
+  "evaluated": false,
   "market_dates": {
     "us": "2026-11-13",
     "jp": "2026-11-13"
@@ -165,7 +165,7 @@
       "unit": "倍",
       "stale_evals": 0,
       "extra": {
-        "days_since_update": 2,
+        "days_since_update": 3,
         "overdue": false
       }
     },
@@ -177,7 +177,7 @@
       "unit": "倍",
       "stale_evals": 0,
       "extra": {
-        "days_since_update": 2,
+        "days_since_update": 3,
         "overdue": false
       }
     }
