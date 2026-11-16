@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-15T10:13:48+09:00",
+  "generated_at": "2026-11-16T10:20:24+09:00",
   "evaluated": false,
   "market_dates": {
     "us": "2026-11-13",
@@ -123,18 +123,18 @@
     },
     "wti": {
       "label": "WTI 原油",
-      "value": 88.55999755859375,
+      "value": 88.33999633789062,
       "status": "live",
-      "as_of": "2026-11-13",
+      "as_of": "2026-11-15",
       "unit": "ドル",
       "stale_evals": 0,
       "extra": {}
     },
     "usdjpy_1m": {
       "label": "ドル円 1か月変化率",
-      "value": 0.98,
+      "value": 1.04,
       "status": "live",
-      "as_of": "2026-11-13",
+      "as_of": "2026-11-16",
       "unit": "%",
       "stale_evals": 0,
       "extra": {}
@@ -165,7 +165,7 @@
       "unit": "倍",
       "stale_evals": 0,
       "extra": {
-        "days_since_update": 3,
+        "days_since_update": 4,
         "overdue": false
       }
     },
@@ -177,7 +177,7 @@
       "unit": "倍",
       "stale_evals": 0,
       "extra": {
-        "days_since_update": 3,
+        "days_since_update": 4,
         "overdue": false
       }
     }
