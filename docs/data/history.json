@@ -11222,6 +11222,49 @@
         "7735.T": "買い増し",
         "285A.T": "買い増し"
       }
+    },
+    {
+      "date": "2026-11-19",
+      "backfill": false,
+      "market_dates": {
+        "us": "2026-11-18",
+        "jp": "2026-11-18"
+      },
+      "areas": {
+        "us": {
+          "ratio": 20,
+          "raw_ratio": 20,
+          "ratio_excl_manual": 20,
+          "points": -1,
+          "on_hold": false,
+          "pending_down": null
+        },
+        "jp": {
+          "ratio": 10,
+          "raw_ratio": 10,
+          "ratio_excl_manual": 20,
+          "points": -3,
+          "on_hold": false,
+          "pending_down": null
+        },
+        "semi": {
+          "ratio": 10,
+          "raw_ratio": 10,
+          "ratio_excl_manual": 10,
+          "points": -5,
+          "on_hold": false,
+          "pending_down": null
+        }
+      },
+      "verdicts": {
+        "VTI": "保有",
+        "1321.T": "買い増し",
+        "NVDA": "買い増し",
+        "SOXL": "買い増し",
+        "6146.T": "買い増し",
+        "7735.T": "買い増し",
+        "285A.T": "買い増し"
+      }
     }
   ]
 }
