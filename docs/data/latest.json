@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-23T10:55:16+09:00",
-  "evaluated": false,
+  "generated_at": "2026-11-24T14:28:15+09:00",
+  "evaluated": true,
   "market_dates": {
-    "us": "2026-11-20",
+    "us": "2026-11-23",
     "jp": "2026-11-20"
   },
   "market_fetch": {
@@ -12,18 +12,18 @@
   "metrics": {
     "fg": {
       "label": "Fear & Greed",
-      "value": 9.67368421052632,
+      "value": 16.9658627087199,
       "status": "live",
-      "as_of": "2026-11-20",
+      "as_of": "2026-11-24",
       "unit": "",
       "stale_evals": 0,
       "extra": {}
     },
     "ndx_drop": {
       "label": "NASDAQ100 高値からの下落率",
-      "value": 19.8,
+      "value": 14.3,
       "status": "live",
-      "as_of": "2026-11-20",
+      "as_of": "2026-11-23",
       "unit": "%",
       "stale_evals": 0,
       "extra": {}
@@ -39,21 +39,21 @@
     },
     "sox_drop": {
       "label": "SOX 高値からの下落率",
-      "value": 42.5,
+      "value": 34.5,
       "status": "live",
-      "as_of": "2026-11-20",
+      "as_of": "2026-11-23",
       "unit": "%",
       "stale_evals": 0,
       "extra": {
-        "days": 107,
+        "days": 108,
         "peak_date": "2026-06-22"
       }
     },
     "ndx_gap": {
       "label": "NASDAQ100 200日線からの乖離",
-      "value": -10.8,
+      "value": -4.8,
       "status": "live",
-      "as_of": "2026-11-20",
+      "as_of": "2026-11-23",
       "unit": "%",
       "stale_evals": 0,
       "extra": {}
@@ -69,27 +69,27 @@
     },
     "sox_gap": {
       "label": "SOX 200日線からの乖離",
-      "value": -23.0,
+      "value": -12.3,
       "status": "live",
-      "as_of": "2026-11-20",
+      "as_of": "2026-11-23",
       "unit": "%",
       "stale_evals": 0,
       "extra": {}
     },
     "us10y": {
       "label": "米10年債利回り",
-      "value": 5.04,
+      "value": 4.92,
       "status": "live",
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "unit": "%",
       "stale_evals": 0,
       "extra": {}
     },
     "us10y_streak": {
       "label": "米10年債 4.5%以上の連続日数",
-      "value": 95.0,
+      "value": 96.0,
       "status": "live",
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "unit": "日",
       "stale_evals": 0,
       "extra": {}
@@ -105,7 +105,7 @@
     },
     "gdp_spread": {
       "label": "名目GDP成長率 − 米10年債利回り",
-      "value": 0.83,
+      "value": 0.95,
       "status": "live",
       "as_of": "2026-07-01",
       "unit": "%",
@@ -123,16 +123,16 @@
     },
     "wti": {
       "label": "WTI 原油",
-      "value": 83.19000244140625,
+      "value": 80.16999816894531,
       "status": "live",
-      "as_of": "2026-11-22",
+      "as_of": "2026-11-23",
       "unit": "ドル",
       "stale_evals": 0,
       "extra": {}
     },
     "usdjpy_1m": {
       "label": "ドル円 1か月変化率",
-      "value": 1.54,
+      "value": 1.56,
       "status": "live",
       "as_of": "2026-11-23",
       "unit": "%",
@@ -152,7 +152,7 @@
       "label": "実効FF金利",
       "value": 3.88,
       "status": "live",
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "unit": "%",
       "stale_evals": 0,
       "extra": {}
@@ -165,7 +165,7 @@
       "unit": "倍",
       "stale_evals": 0,
       "extra": {
-        "days_since_update": 11,
+        "days_since_update": 12,
         "overdue": false
       }
     },
@@ -177,27 +177,27 @@
       "unit": "倍",
       "stale_evals": 0,
       "extra": {
-        "days_since_update": 11,
+        "days_since_update": 12,
         "overdue": false
       }
     }
   },
   "areas": {
     "us": {
-      "points": -3,
+      "points": -2,
       "ratio": 20,
-      "raw_ratio": 10,
-      "ratio_excl_manual": 10,
+      "raw_ratio": 20,
+      "ratio_excl_manual": 20,
       "on_hold": false,
-      "pending_down": 10,
+      "pending_down": null,
       "contributions": [
         {
           "key": "fg",
-          "points": -2
+          "points": -1
         },
         {
           "key": "ndx_drop",
-          "points": 0
+          "points": -1
         },
         {
           "key": "us10y_streak",
@@ -205,7 +205,7 @@
         },
         {
           "key": "ndx_gap",
-          "points": -1
+          "points": 0
         },
         {
           "key": "gdp_spread",
@@ -221,16 +221,16 @@
         }
       ],
       "missing": [],
-      "reason": "Fear & Greed 10／米10年債4.5%以上 95日連続／NASDAQ100 200日線比-10.8%",
+      "reason": "Fear & Greed 17／NASDAQ100 高値比-14.3%／米10年債4.5%以上 96日連続",
       "prev_ratio": 20
     },
     "jp": {
       "points": -4,
-      "ratio": 20,
+      "ratio": 10,
       "raw_ratio": 10,
       "ratio_excl_manual": 20,
       "on_hold": false,
-      "pending_down": 10,
+      "pending_down": null,
       "contributions": [
         {
           "key": "n225_drop",
@@ -266,10 +266,10 @@
       "prev_ratio": 20
     },
     "semi": {
-      "points": -8,
+      "points": -6,
       "ratio": 0,
       "raw_ratio": 0,
-      "ratio_excl_manual": 0,
+      "ratio_excl_manual": 10,
       "on_hold": false,
       "pending_down": null,
       "contributions": [
@@ -283,7 +283,7 @@
         },
         {
           "key": "fg",
-          "points": -2
+          "points": -1
         },
         {
           "key": "capex_gdp",
@@ -291,7 +291,7 @@
         },
         {
           "key": "sox_gap",
-          "points": -2
+          "points": -1
         },
         {
           "key": "gdp_spread",
@@ -307,8 +307,8 @@
         }
       ],
       "missing": [],
-      "reason": "SOX 高値比-42.5%（日柄107日）／SOX 予想PER 14.2倍（手入力 11/12）／Fear & Greed 10",
-      "prev_ratio": 10
+      "reason": "SOX 高値比-34.5%（日柄108日）／SOX 予想PER 14.2倍（手入力 11/12）／Fear & Greed 17",
+      "prev_ratio": 0
     }
   },
   "tickers": [
@@ -316,10 +316,10 @@
       "symbol": "VTI",
       "name": "VTI",
       "area": "us",
-      "price": 340.0199890136719,
-      "drop_pct": 11.3,
+      "price": 355.2699890136719,
+      "drop_pct": 7.3,
       "verdict": "保有",
-      "reason": "高値から-11.3%。Fear & Greed 10／米10年債4.5%以上 95日連続。米国株全体。分散が効いており個別より値動きは穏やか。",
+      "reason": "高値から-7.3%。Fear & Greed 17／NASDAQ100 高値比-14.3%。米国株全体。分散が効いており個別より値動きは穏やか。",
       "prev_verdict": "保有"
     },
     {
@@ -328,7 +328,7 @@
       "area": "jp",
       "price": 589.4000244140625,
       "drop_pct": 21.5,
-      "verdict": "保有",
+      "verdict": "買い増し",
       "reason": "高値から-21.5%。日経平均 高値比-22.0%／TOPIX 予想PER 13.7倍（手入力 11/12）。日経平均連動。円高局面で下押しされやすい。",
       "prev_verdict": "保有"
     },
@@ -336,20 +336,20 @@
       "symbol": "NVDA",
       "name": "エヌビディア",
       "area": "semi",
-      "price": 125.52999877929688,
-      "drop_pct": 47.5,
+      "price": 165.0500030517578,
+      "drop_pct": 31.0,
       "verdict": "買い増し",
-      "reason": "高値から-47.5%。SOX 高値比-42.5%（日柄107日）／SOX 予想PER 14.2倍（手入力 11/12）。AI向けGPUの中心銘柄。ハイパースケーラーの設備投資に直結。",
+      "reason": "高値から-31.0%。SOX 高値比-34.5%（日柄108日）／SOX 予想PER 14.2倍（手入力 11/12）。AI向けGPUの中心銘柄。ハイパースケーラーの設備投資に直結。",
       "prev_verdict": "買い増し"
     },
     {
       "symbol": "SOXL",
       "name": "SOXL（半導体ブル3倍）",
       "area": "semi",
-      "price": 30.8799991607666,
-      "drop_pct": 89.7,
+      "price": 43.209999084472656,
+      "drop_pct": 85.6,
       "verdict": "買い増し",
-      "reason": "高値から-89.7%。SOX 高値比-42.5%（日柄107日）／SOX 予想PER 14.2倍（手入力 11/12）。3倍レバレッジ。下落・横ばいで目減りが大きい。警戒時は最初に減らし、大底時は買い増し候補。",
+      "reason": "高値から-85.6%。SOX 高値比-34.5%（日柄108日）／SOX 予想PER 14.2倍（手入力 11/12）。3倍レバレッジ。下落・横ばいで目減りが大きい。警戒時は最初に減らし、大底時は買い増し候補。",
       "prev_verdict": "買い増し"
     },
     {
@@ -359,7 +359,7 @@
       "price": 41350.0,
       "drop_pct": 53.1,
       "verdict": "買い増し",
-      "reason": "高値から-53.1%。SOX 高値比-42.5%（日柄107日）／SOX 予想PER 14.2倍（手入力 11/12）。後工程の製造装置。半導体の設備投資サイクルに遅れて動く。",
+      "reason": "高値から-53.1%。SOX 高値比-34.5%（日柄108日）／SOX 予想PER 14.2倍（手入力 11/12）。後工程の製造装置。半導体の設備投資サイクルに遅れて動く。",
       "prev_verdict": "買い増し"
     },
     {
@@ -369,7 +369,7 @@
       "price": 7121.0,
       "drop_pct": 63.3,
       "verdict": "買い増し",
-      "reason": "高値から-63.3%。SOX 高値比-42.5%（日柄107日）／SOX 予想PER 14.2倍（手入力 11/12）。前工程（洗浄）の製造装置。設備投資サイクルに連動。",
+      "reason": "高値から-63.3%。SOX 高値比-34.5%（日柄108日）／SOX 予想PER 14.2倍（手入力 11/12）。前工程（洗浄）の製造装置。設備投資サイクルに連動。",
       "prev_verdict": "買い増し"
     },
     {
@@ -379,7 +379,7 @@
       "price": 7307.0,
       "drop_pct": 79.8,
       "verdict": "買い増し",
-      "reason": "高値から-79.8%。SOX 高値比-42.5%（日柄107日）／SOX 予想PER 14.2倍（手入力 11/12）。NANDメモリー。メモリー市況の振れが大きく、下落局面で先に崩れやすい。",
+      "reason": "高値から-79.8%。SOX 高値比-34.5%（日柄108日）／SOX 予想PER 14.2倍（手入力 11/12）。NANDメモリー。メモリー市況の振れが大きく、下落局面で先に崩れやすい。",
       "prev_verdict": "買い増し"
     }
   ],
